@@ -174,7 +174,7 @@ fun partyAction(current_fighter: Entity, opponent: Entity){
     }
 }
 fun opponentAction(self: Entity, turns: Int) {
-    val magicSeed = Random.nextInt(0, 15) //set this to be higher after functionality is confirmed //has been set to 15 (testing val 7)
+    val magicSeed = Random.nextInt(0, 15) 
     val useMagic = magicSeed in (0..7)
     when (useMagic) {
         true -> {
