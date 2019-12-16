@@ -145,6 +145,8 @@ fun battleOver(current_fighter: Entity, dead_chars: MutableMap<Int, Entity>, opp
     if (active_opponent_spell.spell != heal1) {
         active_opponent_spell.spell.checkDuration(turns = 99, lastBoostTurn = 0, boosted_entity = opponent)
     }
+    for (char in party.values){char.xp += (turns.value * 50); char.xpcheck()}
+    turns.value = 0
     nav()
 }
 
