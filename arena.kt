@@ -120,12 +120,11 @@ fun battleLoop(opponent: Entity){ //control for arena
                 }
             }
             partyAction(current_fighter, opponent)
-            println("broke from actionloop")
             val max_fighter_idx = party.keys.max()
             val min_fighter_idx = party.keys.min()
             val previous_fighter = current_fighter
             val fallback_fighter = if (party[max_fighter_idx] == current_fighter){party[min_fighter_idx]!!}else{party[max_fighter_idx]!!}
-            current_fighter = party[idx + 1] ?: fallback_fighter //test with four and five-fighter parties
+            current_fighter = party[idx + 1] ?: fallback_fighter
         }
         catch(exception: IllegalArgumentException){println("Not an option."); continue}
         catch(exception: BattleEnd){break@battleloop}
@@ -157,14 +156,12 @@ fun partyAction(current_fighter: Entity, opponent: Entity){
         when (fighter_choice){
             1 -> {
                 current_fighter.attack(target = opponent)
-                println("\nattack menu done\n")
                 if (opponent.current_health > 0){opponentAction(self = opponent, turns = turns.value)}else{println("${opponent.name} is dead!")}
                 break@actionLoop
             }
             2 -> {
                 when(useMagicMenu(fighter = current_fighter, opponent = opponent)){
                     "complete" -> {
-                        println("\nusemagicmenu done\n")
                         if (opponent.current_health > 0){opponentAction(self = opponent, turns = turns.value)}else{println("${opponent.name} is dead!")}
                         break@actionLoop
                     }
@@ -227,7 +224,7 @@ fun opponentAction(self: Entity, turns: Int) {
     }
 }
 
-fun useMagicMenu(fighter: Entity, opponent: Entity): String{ //maybe have this return "finished" so that partyaction knows when to advance
+fun useMagicMenu(fighter: Entity, opponent: Entity): String{
     superloop@while (true) {
         try{
             var fighter_spells = ""
@@ -304,6 +301,6 @@ fun useMagicMenu(fighter: Entity, opponent: Entity): String{ //maybe have this r
             }
         }
         catch(exception: IllegalArgumentException){println("Not an option."); continue}
-        catch(exception: MenuBackOut){println("${exception.message}"); if (exception.culprit == 3){return "incomplete"}}//ask tanner how to make this go back to partyaction correctly
+        catch(exception: MenuBackOut){println("${exception.message}"); if (exception.culprit == 3){return "incomplete"}}
     }
 }
