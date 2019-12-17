@@ -6,6 +6,7 @@ import kotlin.random.Random
 
 class MenuBackOut(message: String, var culprit: Any): Exception(message)
 class BattleEnd(message: String): Exception(message)
+class LoopBreak(message: String): Exception(message)
 
 class turncounter(var value: Int = 1)
 val turns = turncounter()
@@ -152,7 +153,7 @@ fun battleOver(current_fighter: Entity, dead_chars: MutableMap<Int, Entity>, opp
 
 fun partyAction(current_fighter: Entity, opponent: Entity){
     actionLoop@while(true){
-        print("What will ${current_fighter.name} do?\n1: Attack\n2: Use Magic\n3: Concede\n>\t")
+        print("What will ${current_fighter.name} do?\n1: Attack\n2: Use Magic (MP ${current_fighter.current_mana}/${current_fighter.max_mana})\n3: Concede\n>\t")
         val fighter_choice = readLine()?.toInt()
         if (fighter_choice !in listOf<Int>(1, 2, 3)){println("Not an option"); continue}
         when (fighter_choice){
@@ -176,7 +177,7 @@ fun partyAction(current_fighter: Entity, opponent: Entity){
     }
 }
 fun opponentAction(self: Entity, turns: Int) {
-    val magicSeed = Random.nextInt(0, 15) 
+    val magicSeed = Random.nextInt(0, 15)
     val useMagic = magicSeed in (0..7)
     when (useMagic) {
         true -> {
@@ -220,9 +221,7 @@ fun opponentAction(self: Entity, turns: Int) {
                 else{self.attack(target = party.values.random())}
             }
         }
-        false -> {
-            self.attack(target = party.values.random())
-        }
+        false -> {self.attack(target = party.values.random())}
     }
 }
 
@@ -230,10 +229,10 @@ fun useMagicMenu(fighter: Entity, opponent: Entity): String{
     superloop@while (true) {
         try{
             var fighter_spells = ""
-            print("Use attack spells or boost spells?\n1: Attack Spells\n2: Boost Spells\n3: Don't use a spell\n>\t")
+            print("Use attack spells or boost spells? (MP ${fighter.current_mana}/${fighter.max_mana})\n1: Attack Spells\n2: Boost Spells\n3: Don't use a spell\n>\t")
             val category = readLine()?.toInt()
             if (category !in listOf<Int>(1, 2, 3)){println("Invalid choice."); continue@superloop}
-            if (category == 3){throw MenuBackOut(message = "MenuBackOut on useMagicMenu", culprit = category as Int)}
+            if (category == 3){throw MenuBackOut(message = "", culprit = category as Int)}
             val selectableSpells = mutableMapOf<Int, Spell>()
             when (category){
                 1 -> {
@@ -257,9 +256,13 @@ fun useMagicMenu(fighter: Entity, opponent: Entity): String{
             }
             while (true){
                 var partystr = ""
-                print("Use which spell?\n${fighter_spells}>\t")
-                val spell_choice = readLine()?.toInt()
+                print("Use which spell?\n${fighter_spells}B: Go back\n>\t")
+                val spell_choice_any: Any = readLine() ?: "b"
+                if (spell_choice_any in listOf("b", "B")){throw LoopBreak(message = "LoopBreak")}
+                val spell_choice = spell_choice_any.toString().toInt()
                 if (spell_choice !in selectableSpells.keys){println("Not an option."); continue}
+                val choice_cost = selectableSpells[spell_choice]?.cost ?: 0
+                if ((fighter.current_mana - choice_cost) < 0){throw MenuBackOut(message = "${fighter.name} does not have enough mana to use ${selectableSpells[spell_choice]?.name}", culprit = 3)}
                 if (selectableSpells[spell_choice] is BoostSpell){
                     for (entry in party.entries){partystr += "${entry.key}: ${entry.value.name} (HP: ${entry.value.current_health} / ${entry.value.max_health})\n"}
                     print("Use ${selectableSpells[spell_choice]?.name} on whom?\n${partystr}>\t")
@@ -303,6 +306,7 @@ fun useMagicMenu(fighter: Entity, opponent: Entity): String{
             }
         }
         catch(exception: IllegalArgumentException){println("Not an option."); continue}
+        catch(exception: LoopBreak){continue}
         catch(exception: MenuBackOut){println("${exception.message}"); if (exception.culprit == 3){return "incomplete"}}
     }
 }
